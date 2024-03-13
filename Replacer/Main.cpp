@@ -1,7 +1,6 @@
 #include "../Replacer/Replacer.h"
 #include <fstream>
 #include <iostream>
-#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -13,12 +12,11 @@ struct Args
 	std::string replaceString;
 };
 
-std::optional<Args> ParseArgs(int argc, char* argv[])
+Args ParseArgs(int argc, char* argv[])
 {
 	if (argc != 5)
 	{
 		throw std::invalid_argument("Usage: replacer.exe <inputFile> <outputFile> <searchString> <replacementString>");
-		return std::nullopt;
 	}
 	Args args;
 	args.inputFileName = argv[1];
@@ -32,8 +30,8 @@ int main(int argc, char* argv[])
 {
 	try
 	{
-		auto Args = ParseArgs(argc, argv);
-		CopyFileWithReplacement(Args->inputFileName, Args->outputFileName, Args->searchString, Args->replaceString);
+		auto args = ParseArgs(argc, argv);
+		CopyFileWithReplacement(args.inputFileName, args.outputFileName, args.searchString, args.replaceString);
 	}
 	catch (const std::exception& exception)
 	{

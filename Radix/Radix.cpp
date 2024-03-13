@@ -2,50 +2,41 @@
 #include <exception>
 #include <format>
 #include <iostream>
-#include <optional>
 #include <string>
 #include "Radix.h"
 
-constexpr const int CHAR_OFFSET = 10;
-
-struct Args
-{
-	std::string sourceNotation;
-	std::string destinationNotation;
-	std::string value;
-};
-
-std::optional<Args> ParseArgs(int argc, char* argv[])
-{
-	if (argc != 4)
-	{
-		throw std::invalid_argument("Usage: radix.exe <source notation> <destination notation> <value>");
-		return std::nullopt;
-	}
-	Args args;
-	args.sourceNotation = argv[1];
-	args.destinationNotation = argv[2];
-	args.value = argv[3];
-	return args;
-}
+constexpr const int DECIMAL = 10;
+constexpr const int MIN_RADIX = 2;
+constexpr const int MAX_RADIX = 36;
 
 int StringToInt(const std::string& str, int radix)
 {
 	int result = 0;
-	bool isNegative = false;
-	if (str[0] == '-')
+	//проверка на пустую строку(исправлено)
+	if (str.empty())
 	{
-		isNegative = true;
+		return result;
 	}
-	for (size_t i = isNegative; i < str.length(); i++)
+	bool isNegative = str[0] == '-';
+
+	//преобразование bool в size_t(исправлено)
+	for (size_t i = isNegative ? 1 : 0; i < str.length(); i++)
 	{
 		int digit = CharToInt(str[i]);
+
+		if (IsSumOverflowed(result, digit, radix))
+		{
+			throw std::invalid_argument("Overflow occured");
+		}
+
 		if (digit >= radix)
 		{
 			throw std::invalid_argument(std::format("The digit \"{}\" is not supported by the number system \"{}\"", str[i], radix));
 		}
+
 		result = isNegative ? result * radix - digit : result * radix + digit;
 	}
+
 	return result;
 }
 
@@ -57,47 +48,67 @@ int CharToInt(const char& symbol)
 	}
 	else if (symbol >= 'A' && symbol <= 'Z')
 	{
-		return symbol - 'A' + CHAR_OFFSET;
+		return symbol - 'A' + DECIMAL;
 	}
-	else
-	{
-		throw std::invalid_argument(std::format("Unkown symbol: {}", symbol));
-	}
+	throw std::invalid_argument(std::format("Not supported symbol: {}", symbol));
+}
+
+//название функции неправильное, ещё и произведение Overflowed => Overflown
+bool IsSumOverflowed(int a, int b, int radix)
+{
+	bool moreThanMaxInt = a > 0 && b > INT_MAX - a * radix;
+	bool lessThanMinInt = a < 0 && b > a * radix - INT_MIN;
+	return moreThanMaxInt || lessThanMinInt;
 }
 
 std::string IntToString(int n, int radix)
 {
+	//убрать костыль с 0
 	if (n == 0)
 	{
 		return "0";
 	}
-	std::string result = "";
-	bool isNegative = false;
-	if (n < 0)
-	{
-		isNegative = true;
-		n *= -1;
-	}
-	while (n > 0)
-	{
+	std::string result;
+	bool isNegative = n < 0;
+	while (n != 0)//как сделать так, чтобы 0 обработался
+	{	
 		int digit = n % radix;
-		char c;
-		if (digit < 10)
-		{
-			c = '0' + digit;
-		}
-		else
-		{
-			c = 'A' + digit - 10;	
-		}
-		result = c + result;
+		result = IntToChar(digit) + result;
 		n /= radix;
 	}
 	result = isNegative ? '-' + result : result;
 	return result;
 }
 
-std::string numberConversion(const std::string& sourceNotation, const std::string& destinationNotation, const std::string& value)
+//не надо сюда подавать отрицательные числа
+char IntToChar(int n)
 {
-	return IntToString(StringToInt(value, StringToInt(sourceNotation, 10)), StringToInt(destinationNotation, 10));
+	n = std::abs(n);
+	if (n < DECIMAL)
+	{
+		return static_cast<char>('0' + n);
+	}
+	else
+	{
+		return static_cast<char>('A' + n - DECIMAL);
+	}
+}
+
+std::string ChangeNumberNotation(int sourceNotation, int destinationNotation, const std::string& value)
+{
+	if (!IsNotationsValid(sourceNotation, destinationNotation))
+	{
+		throw std::invalid_argument(std::format("Notations should be between {} and {}", MIN_RADIX, MAX_RADIX));
+	}
+	return IntToString(StringToInt(value, sourceNotation), destinationNotation);
+}
+
+bool IsNotationsValid(int sourceNotation, int destinationNotation)
+{
+	return IsNotationValid(sourceNotation) && IsNotationValid(destinationNotation);
+}
+
+bool IsNotationValid(int notation)
+{
+	return MIN_RADIX <= notation && notation <= MAX_RADIX;
 }
