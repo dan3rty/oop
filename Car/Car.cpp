@@ -86,18 +86,13 @@ bool Car::SetSpeed(int speed)
 	}
 
 	auto const limits = GEAR_SPEED_LIMITS.at(m_gear);
+
 	if (speed < limits.lower || speed > limits.upper)
 	{
 		return false;
 	}
 
-	if (m_speed < 0)
-	{
-		m_speed = -speed;
-		return true;
-	}
-
-	m_speed = m_gear == -1 ? -speed : speed;
+	m_speed = m_gear == -1 || m_speed < 0 ? -speed : speed;
 	return true;
 }
 

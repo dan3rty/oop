@@ -15,11 +15,15 @@ CarControl::CarControl(Car& car, std::istream& input, std::ostream& output)
 		  { "Exit", [this](const int args) { return Exit(); } } })
 {
 }
+// При ctrl + z программа зависла (исправлено)
 
 bool CarControl::HandleCommand()
 {
 	std::string commandLine;
-	std::getline(m_input, commandLine);
+	if (!std::getline(m_input, commandLine))
+	{
+		return false;
+	}
 
 	std::istringstream stream(commandLine);
 

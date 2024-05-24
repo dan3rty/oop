@@ -15,18 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Replacer.cpp">
+    <ClCompile Include="Rational_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tes.cpp">
+    <ClCompile Include="..\Rational\CRational.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Replacer.h">
+    <ClInclude Include="..\Rational\CRational.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
