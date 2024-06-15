@@ -1,0 +1,10 @@
+Ivanov Aleksey Petrovich 180 80
+Smirnov Dmitriy Sergeevich 175 75
+Popov Vladimir Ivanovich 185 85
+Kozlov Andrey Nikolaevich 178 78
+Lebedev Sergey Vladimirovich 182 82
+Vasiliev Igor Aleksandrovich 176 77
+Petrov Nikolay Dmitrievich 181 83
+Sokolov Artem Mikhaylovich 179 79
+Mikhaylov Vladislav Konstantinovich 183 110
+Fedorov Denis Andreevich 177 76

@@ -18,7 +18,6 @@ public:
 
 	std::pair<int, CRational> ToCompoundFraction() const;
 
-	// конст тож нинада (исправлено)
 	CRational operator+() const;
 	CRational operator-() const;
 
@@ -38,14 +37,12 @@ private:
 	int m_denominator = 1;
 };
 
-// нинада конст (пользы никакой) (исправлено)
 CRational operator+(CRational r1, CRational const& r2);
 CRational operator-(CRational r1, CRational const& r2);
 
 CRational operator*(CRational r1, CRational const& r2);
 CRational operator/(CRational r1, CRational const& r2);
 
-// spaceship (исправлено)
 
 std::ostream& operator<<(std::ostream& stream, CRational const& r);
 std::istream& operator>>(std::istream& stream, CRational& r);
