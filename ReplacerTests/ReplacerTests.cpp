@@ -1,6 +1,6 @@
 #include <iostream>
-#define CATCH_CONFIG_MAIN
 #include "../Replacer/Replacer.h"
+#define CATCH_CONFIG_MAIN
 #include "../catch2/catch.hpp"
 
 TEST_CASE("String replacement with possible looping")

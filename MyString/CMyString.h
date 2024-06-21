@@ -86,11 +86,13 @@ public:
 			return self -= offset;
 		}
 
+		// местами бы поменять чис и итер
 		friend MyType operator-(difference_type offset, MyType const& it)
 		{
 			return it - offset;
 		}
 
+		// реализовать постфиксные инк и дек
 		MyType& operator--()
 		{
 			return *this -= 1;
@@ -111,6 +113,7 @@ public:
 			return it1.m_item - it2.m_item;
 		}
 
+		//оператор должен быть константным
 		reference operator[](difference_type index)
 		{
 			return m_item[index];
@@ -122,6 +125,7 @@ public:
 
 	using iterator = IteratorBase<false, true>;
 	using const_iterator = IteratorBase<true, true>;
+	//ревёрс итератор через std::reverse_iterator
 	using reverse_iterator = IteratorBase<false, false>;
 	using const_reverse_iterator = IteratorBase<true, false>;
 
@@ -164,22 +168,22 @@ public:
 	char const& operator[](size_t index) const;
 	char& operator[](size_t index);
 
+	size_t GetCapacity() const;
+
 
 private:
 	char* m_data;
 	size_t m_length;
+	size_t m_capacity;
+
+private:
+	CMyString(char* pString, size_t length, size_t capacity) noexcept;
 };
 
 CMyString const operator+(CMyString s1, CMyString const& s2);
 
 bool operator==(CMyString const& s1, CMyString const& s2);
-bool operator!=(CMyString const& s1, CMyString const& s2);
-
-bool operator<(CMyString const& s1, CMyString const& s2);
-bool operator>(CMyString const& s1, CMyString const& s2);
-
-bool operator<=(CMyString const& s1, CMyString const& s2);
-bool operator>=(CMyString const& s1, CMyString const& s2);
+std::strong_ordering operator<=>(CMyString const& s1, CMyString const& s2);
 
 std::ostream& operator<<(std::ostream& stream, CMyString const& s);
 std::istream& operator>>(std::istream& stream, CMyString& s);

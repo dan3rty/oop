@@ -94,6 +94,8 @@ TEST_CASE("string creation from other strings")
 		{
 			CMyString s = "Hello, wonderful World!";
 			CMyString const copy(s);
+			int sLength = s.GetLength();
+			int copyLength = copy.GetLength();
 
 			REQUIRE(std::strcmp(s.GetStringData(), copy.GetStringData()) == 0);
 			REQUIRE(s.GetLength() == copy.GetLength());

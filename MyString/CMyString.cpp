@@ -5,6 +5,7 @@ constexpr char STRING_END = '\0';
 CMyString::CMyString()
 	: m_data(new char[1])
 	, m_length(0)
+	, m_capacity(0)
 {
 	m_data[0] = STRING_END;
 }
@@ -16,6 +17,7 @@ CMyString::CMyString(const char* pString)
 
 CMyString::CMyString(const char* pString, size_t length)
 {
+	// в memcpy низя nullptr => invalid
 	if (pString == nullptr)
 	{
 		length = 0;
@@ -23,20 +25,25 @@ CMyString::CMyString(const char* pString, size_t length)
 
 	m_data = new char[length + 1];
 	m_length = length;
+	m_capacity = length;
 	std::memcpy(m_data, pString, m_length);
 	m_data[m_length] = STRING_END;
 }
 
 CMyString::CMyString(CMyString const& other)
-	: CMyString(other.m_data, other.m_length)
+	: CMyString(new char[other.m_capacity + 1], other.m_length, other.m_capacity)
 {
+	std::uninitialized_copy_n(other.m_data, m_length + 1, m_data);
 }
 
 CMyString::CMyString(CMyString&& other) noexcept
 	: m_data(other.m_data)
 	, m_length(other.m_length)
+	, m_capacity(other.m_capacity)
 {
-	other.m_data = nullptr;
+	//invalid state
+	other.m_data[0] = STRING_END;
+	other.m_capacity = 0;
 	other.m_length = 0;
 }
 
@@ -49,9 +56,18 @@ CMyString& CMyString::operator=(CMyString const& other)
 {
 	if (std::addressof(other) != this)
 	{
-		CMyString copy(other);
-		std::swap(m_data, copy.m_data);
-		std::swap(m_length, copy.m_length);
+		if (m_capacity >= other.m_length)
+		{
+			std::copy_n(other.m_data, other.m_length + 1, m_data);
+			m_length = other.m_length;
+		}
+		else
+		{
+			CMyString copyStr(other);
+			std::swap(m_data, copyStr.m_data);
+			std::swap(m_length, copyStr.m_length);
+			std::swap(m_capacity, copyStr.m_capacity);
+		}
 	}
 	return *this;
 }
@@ -64,9 +80,12 @@ CMyString& CMyString::operator=(CMyString&& other) noexcept
 
 		m_data = other.m_data;
 		m_length = other.m_length;
+		m_capacity = other.m_capacity;
 
+		//invalid state (other)
 		other.m_data = nullptr;
 		other.m_length = 0;
+		other.m_capacity = 0;
 	}
 	return *this;
 }
@@ -104,6 +123,7 @@ CMyString CMyString::SubString(size_t start, size_t length) const
 
 void CMyString::Clear()
 {
+	//1. сделать невыбрасывающим, 2. не должен удалять данные, а должен обнулить длину а вместимость оставить ту же
 	delete[] m_data;
 	m_data = new char[1];
 	m_data[0] = STRING_END;
@@ -147,6 +167,7 @@ CMyString::reverse_iterator CMyString::rbegin()
 
 CMyString::reverse_iterator CMyString::rend()
 {
+	//неопределённое поведение 
 	return m_data - 1;
 }
 
@@ -162,6 +183,7 @@ CMyString::const_reverse_iterator CMyString::crend() const
 
 CMyString& CMyString::operator+=(CMyString const& other)
 {
+	//может быть такое, что вместимость строки достаточна
 	size_t resultLength = m_length + other.m_length;
 	char* result = new char[resultLength + 1];
 
@@ -169,9 +191,13 @@ CMyString& CMyString::operator+=(CMyString const& other)
 	std::memcpy(result + m_length, other.m_data, other.m_length);
 	result[resultLength] = STRING_END;
 
+	size_t length = GetLength() + other.GetLength();
+	size_t capacity = std::max(length, m_capacity * 2);
+	
 	delete[] m_data;
 	m_data = result;
 	m_length = resultLength;
+	m_capacity = capacity;
 
 	return *this;
 }
@@ -208,7 +234,7 @@ static char* Reallocate(char* ptr, size_t length, size_t newLength)
 	delete[] ptr;
 
 	return newPtr;
-}
+}	
 
 std::istream& operator>>(std::istream& stream, CMyString & s)
 {
@@ -226,6 +252,8 @@ std::istream& operator>>(std::istream& stream, CMyString & s)
 
 CMyString const operator+(CMyString s1, CMyString const& s2)
 {
+	//определить суммарную длинну строки, выделить и занять. 2. константную строку не возвращаьт
+
 	return s1 += s2;
 }
 
@@ -254,32 +282,13 @@ static int StrCmp(CMyString const& s1, CMyString const& s2)
 
 bool operator==(CMyString const& s1, CMyString const& s2)
 {
+	//не эффективно, если разная длинна то смысла то и нету
 	return StrCmp(s1, s2) == 0;
 }
 
-bool operator!=(CMyString const& s1, CMyString const& s2)
+std::strong_ordering operator<=>(CMyString const& s1, CMyString const& s2)
 {
-	return StrCmp(s1, s2) != 0;
-}
-
-bool operator<(CMyString const& s1, CMyString const& s2)
-{
-	return StrCmp(s1, s2) < 0;
-}
-
-bool operator>(CMyString const& s1, CMyString const& s2)
-{
-	return StrCmp(s1, s2) > 0;
-}
-
-bool operator<=(CMyString const& s1, CMyString const& s2)
-{
-	return StrCmp(s1, s2) <= 0;
-}
-
-bool operator>=(CMyString const& s1, CMyString const& s2)
-{
-	return StrCmp(s1, s2) >= 0;
+	return StrCmp(s1, s2) <=> 0;
 }
 
 std::ostream& operator<<(std::ostream& stream, CMyString const& s)
@@ -289,4 +298,16 @@ std::ostream& operator<<(std::ostream& stream, CMyString const& s)
 		stream << s.GetStringData()[i];
 	}
 	return stream;
+}
+
+size_t CMyString::GetCapacity() const
+{
+	return m_capacity;
+}
+
+CMyString::CMyString(char* pString, size_t length, size_t capacity) noexcept
+	: m_data(pString)
+	, m_length(length)
+	, m_capacity(capacity)
+{
 }
